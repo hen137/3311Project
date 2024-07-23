@@ -6,11 +6,11 @@ import com.sun.net.httpserver.HttpServer;
 
 public class App 
 {
-    public static final Actor ACTOR = new Actor();
-    public static final Movie MOVIE = new Movie();
-    public static final Relationship RELATIONSHIP = new Relationship();
-    public static final Bacon BACON = new Bacon();
-    public static final DoS DOS = new DoS();
+    private static final Actor ACTOR = new Actor();
+    private static final Movie MOVIE = new Movie();
+    private static final Relationship RELATIONSHIP = new Relationship();
+    private static final Bacon BACON = new Bacon();
+    private static final DoS DOS = new DoS();
 
     static int PORT = 8080;
 
@@ -20,11 +20,11 @@ public class App
 
         server.createContext("/api/v1/addActor/", ACTOR);
         server.createContext("/api/v1/getActor/", ACTOR);
-        server.createContext("/api/v1/allMovies", ACTOR);
+        server.createContext("/api/v1/checkRelatedActors/", ACTOR);
 
         server.createContext("/api/addMovie/", MOVIE);
         server.createContext("/api/getMovie/", MOVIE);
-        server.createContext("/api/allActors/", MOVIE);
+        server.createContext("/api/getRelatedMovies/", MOVIE);
 
         server.createContext("/api/addRelationship/", RELATIONSHIP);
         server.createContext("/api/hasRelationship/", RELATIONSHIP);

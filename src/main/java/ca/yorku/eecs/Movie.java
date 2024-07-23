@@ -20,7 +20,7 @@ public class Movie implements HttpHandler {
 
     }
 
-    public void handleGetAll(HttpExchange r) {
+    public void handleRelatedMovies(HttpExchange r) {
 
     }
 }

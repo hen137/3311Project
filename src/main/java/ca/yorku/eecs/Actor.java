@@ -20,7 +20,7 @@ public class Actor implements HttpHandler {
 
     }
 
-    public void handleGetAll(HttpExchange r) {
+    public void handleRelatedActors(HttpExchange r) {
 
     }
 }
