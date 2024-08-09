@@ -17,27 +17,27 @@ public class Relationship implements HttpHandler {
     public Relationship() {
     }
 
+    @Override
     public void handle(HttpExchange r) throws IOException {
         try {
-            if (r.getRequestMethod().equals("PUT")) {
+            if (r.getRequestMethod().equalsIgnoreCase("PUT")) {
                 handlePut(r);
-            } else if (r.getRequestMethod().equals("GET")) {
+            } else if (r.getRequestMethod().equalsIgnoreCase("GET") && r.getHttpContext().getPath().equals("/api/v1/relationship")) {
                 handleGet(r);
             } else {
-                r.sendResponseHeaders(405, -1);
+                r.sendResponseHeaders(404, -1);
             }
         } catch (Exception e) {
-            r.sendResponseHeaders(500, -1);
+            e.printStackTrace();
+            r.sendResponseHeaders(500, -1); 
         }
     }
 
-    public void handlePut(HttpExchange r) throws IOException, JSONException {
+    private void handlePut(HttpExchange r) throws IOException, JSONException {
         String body = Utils.convert(r.getRequestBody());
         JSONObject deserialized = new JSONObject(body);
 
-        String actorId, movieId, query;
-        StatementResult result;
-
+        String actorId, movieId;
         if (deserialized.has("actorId") && deserialized.has("movieId")) {
             actorId = deserialized.getString("actorId");
             movieId = deserialized.getString("movieId");
@@ -48,19 +48,19 @@ public class Relationship implements HttpHandler {
 
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
-                query = "MATCH (a:Actor {id: $actorId}), (m:Movie {id: $movieId}) " +
-                        "CREATE (a)-[:ACTED_IN]->(m)";
-                result = tx.run(query, parameters("actorId", actorId, "movieId", movieId));
+                String query = "MATCH (a:Actor {id: $actorId}), (m:Movie {id: $movieId}) " +
+                               "CREATE (a)-[:ACTED_IN]->(m)";
+                tx.run(query, parameters("actorId", actorId, "movieId", movieId));
                 tx.success();
-                r.sendResponseHeaders(200, -1); 
+                r.sendResponseHeaders(200, -1);
             } catch (Exception e) {
-                System.err.println("Caught Exception: " + e.getMessage());
+                e.printStackTrace();
                 r.sendResponseHeaders(500, -1); 
             }
         }
     }
 
-    public void handleGet(HttpExchange r) throws IOException, JSONException {
+    private void handleGet(HttpExchange r) throws IOException, JSONException {
         String query = r.getRequestURI().getQuery();
         String actorId = null;
         String movieId = null;
@@ -92,17 +92,17 @@ public class Relationship implements HttpHandler {
                     response.put("hasRelationship", true);
 
                     String responseText = response.toString();
-                    r.sendResponseHeaders(200, responseText.length());
+                    r.sendResponseHeaders(200, responseText.length()); 
                     OutputStream os = r.getResponseBody();
                     os.write(responseText.getBytes());
                     os.close();
                 } else {
-                    r.sendResponseHeaders(404, -1); 
+                    r.sendResponseHeaders(404, -1);
                 }
             } catch (Exception e) {
-                System.err.println("Caught Exception: " + e.getMessage());
+                e.printStackTrace();
                 r.sendResponseHeaders(500, -1); 
+            }
         }
-    }
     }
 }
