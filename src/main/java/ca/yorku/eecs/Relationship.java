@@ -19,7 +19,6 @@ public class Relationship implements HttpHandler {
 
     @Override
     public void handle(HttpExchange r) throws IOException {
-        System.out.println("Request received: " + r.getRequestMethod() + " " + r.getRequestURI());
         try {
             if (r.getRequestMethod().equalsIgnoreCase("PUT") && r.getHttpContext().getPath().equals("/api/v1/addRelationship/")) {
                 handlePut(r);
@@ -30,7 +29,7 @@ public class Relationship implements HttpHandler {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            r.sendResponseHeaders(500, -1); 
+            r.sendResponseHeaders(500, -1);
         }
     }
 
@@ -48,28 +47,46 @@ public class Relationship implements HttpHandler {
         }
 
         try (Session session = Utils.driver.session()) {
+            StatementResult result;
+            String query;
+
+            
             try (Transaction tx = session.beginTransaction()) {
-                
-                String checkQuery = "MATCH (a:Actor {id: $actorId})-[r:ACTED_IN]->(m:Movie {id: $movieId}) RETURN r";
-                StatementResult checkResult = tx.run(checkQuery, parameters("actorId", actorId, "movieId", movieId));
-                
-                if (checkResult.hasNext()) {         
-                    System.out.println("Relationship already exists: Actor " + actorId + " -> Movie " + movieId);
-                    r.sendResponseHeaders(200, -1); 
-                } else {                   
-                    String query = "MATCH (a:Actor {id: $actorId}), (m:Movie {id: $movieId}) " +
-                                   "MERGE (a)-[:ACTED_IN]->(m)";
-                    tx.run(query, parameters("actorId", actorId, "movieId", movieId));
-                    tx.success();
-                    System.out.println("Relationship created: Actor " + actorId + " -> Movie " + movieId);
-                    r.sendResponseHeaders(201, -1);
+                query = "MATCH (a:Actor {id: $actorId}) RETURN a.name";
+                result = tx.run(query, parameters("actorId", actorId));
+
+                if (!result.hasNext()) {
+                    r.sendResponseHeaders(404, -1); 
+                    return;
                 }
+            }
+
+           
+            try (Transaction tx = session.beginTransaction()) {
+                query = "MATCH (m:Movie {id: $movieId}) RETURN m.title";
+                result = tx.run(query, parameters("movieId", movieId));
+
+                if (!result.hasNext()) {
+                    r.sendResponseHeaders(404, -1); 
+                    return;
+                }
+            }
+
+         
+            try (Transaction tx = session.beginTransaction()) {
+                query = "MATCH (a:Actor {id: $actorId}), (m:Movie {id: $movieId}) " +
+                        "MERGE (a)-[:ACTED_IN]->(m)";
+                tx.run(query, parameters("actorId", actorId, "movieId", movieId));
+                tx.success();
+                System.out.println("Relationship created: Actor " + actorId + " -> Movie " + movieId);
+                r.sendResponseHeaders(200, -1);
             } catch (Exception e) {
                 e.printStackTrace();
-                r.sendResponseHeaders(500, -1);
+                r.sendResponseHeaders(500, -1); 
             }
         }
     }
+
     private void handleGet(HttpExchange r) throws IOException, JSONException {
         String query = r.getRequestURI().getQuery();
         String actorId = null;
@@ -86,7 +103,7 @@ public class Relationship implements HttpHandler {
         }
 
         if (actorId == null || movieId == null) {
-            r.sendResponseHeaders(400, -1);
+            r.sendResponseHeaders(400, -1); 
             return;
         }
 
@@ -113,7 +130,7 @@ public class Relationship implements HttpHandler {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                r.sendResponseHeaders(500, -1);
+                r.sendResponseHeaders(500, -1); 
             }
         }
     }
