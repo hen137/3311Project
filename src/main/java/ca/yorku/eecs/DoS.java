@@ -128,8 +128,9 @@ public class DoS implements HttpHandler {
                     return;
                 }
 
-                DosPath = new StringBuilder("[");
                 boolean actor_movie = true;
+                DosPath = new StringBuilder("[");
+
                 for (Path.Segment step: result.next().get("p").asPath()) {
                     if (!actor_movie) {
                         query = "MATCH (a) WHERE ID(a) = $ID RETURN a.actorId";

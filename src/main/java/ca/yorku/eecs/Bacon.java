@@ -71,9 +71,10 @@ public class Bacon implements HttpHandler {
                         r.sendResponseHeaders(404, -1);
                         return;
                     }
+
+                    baconNumber = result.next().get("p").asPath().length() / 2;
                 }
 
-                baconNumber = result.next().get("p").asPath().length() / 2;
 
                 response = String.format("{\"baconNumber\": %d}", baconNumber);
 
@@ -120,8 +121,9 @@ public class Bacon implements HttpHandler {
                     return;
                 }
 
-                baconPath = new StringBuilder("[");
                 boolean actor_movie = true;
+                baconPath = new StringBuilder("[");
+
                 for (Path.Segment step: result.next().get("p").asPath()) {
                     if (!actor_movie) {
                         query = "MATCH (a) WHERE ID(a) = $ID RETURN a.actorId";
