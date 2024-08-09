@@ -152,7 +152,7 @@ public class Bacon implements HttpHandler {
                 OutputStream os = r.getResponseBody();
                 os.write(response.getBytes());
                 os.close();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 System.err.println("Caught Exception: " + e.getMessage());
                 r.sendResponseHeaders(500, -1);
             }
