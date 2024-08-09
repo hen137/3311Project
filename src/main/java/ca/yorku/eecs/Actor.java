@@ -107,9 +107,6 @@ public class Actor implements HttpHandler {
                 System.err.println("Caught Exception: " + e.getMessage());
                 r.sendResponseHeaders(500, -1);
             }
-        } catch (Exception e) {
-            System.err.println("Caught Exception: " + e.getMessage());
-            r.sendResponseHeaders(500, -1);
         }
     }
 
@@ -160,10 +157,6 @@ public class Actor implements HttpHandler {
                 System.err.println("Caught Exception: " + e.getMessage());
                 r.sendResponseHeaders(500, -1);
             }
-        }
-        catch (Exception e) {
-            System.err.println("Caught Exception: " + e.getMessage());
-            r.sendResponseHeaders(500, -1);
         }
     }
 }

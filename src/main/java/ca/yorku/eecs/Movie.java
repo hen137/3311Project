@@ -7,7 +7,6 @@ import org.json.JSONObject;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -108,9 +107,6 @@ public class Movie implements HttpHandler {
                 System.err.println("Caught Exception: " + e.getMessage());
                 r.sendResponseHeaders(500, -1);
             }
-        } catch (Exception e) {
-            System.err.println("Caught Exception: " + e.getMessage());
-            r.sendResponseHeaders(500, -1);
         }
     }
 
@@ -161,10 +157,6 @@ public class Movie implements HttpHandler {
                 System.err.println("Caught Exception: " + e.getMessage());
                 r.sendResponseHeaders(500, -1);
             }
-        }
-        catch (Exception e) {
-            System.err.println("Caught Exception: " + e.getMessage());
-            r.sendResponseHeaders(500, -1);
         }
     }
 }
