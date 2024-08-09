@@ -19,13 +19,14 @@ public class Relationship implements HttpHandler {
 
     @Override
     public void handle(HttpExchange r) throws IOException {
+        System.out.println("Request received: " + r.getRequestMethod() + " " + r.getRequestURI());
         try {
-            if (r.getRequestMethod().equalsIgnoreCase("PUT")) {
+            if (r.getRequestMethod().equalsIgnoreCase("PUT") && r.getHttpContext().getPath().equals("/api/v1/addRelationship/")) {
                 handlePut(r);
-            } else if (r.getRequestMethod().equalsIgnoreCase("GET") && r.getHttpContext().getPath().equals("/api/v1/relationship")) {
+            } else if (r.getRequestMethod().equalsIgnoreCase("GET") && r.getHttpContext().getPath().equals("/api/v1/hasRelationship/")) {
                 handleGet(r);
             } else {
-                r.sendResponseHeaders(404, -1);
+                r.sendResponseHeaders(404, -1); 
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -52,10 +53,11 @@ public class Relationship implements HttpHandler {
                                "CREATE (a)-[:ACTED_IN]->(m)";
                 tx.run(query, parameters("actorId", actorId, "movieId", movieId));
                 tx.success();
-                r.sendResponseHeaders(200, -1);
+                System.out.println("Relationship created: Actor " + actorId + " -> Movie " + movieId);
+                r.sendResponseHeaders(200, -1); 
             } catch (Exception e) {
                 e.printStackTrace();
-                r.sendResponseHeaders(500, -1); 
+                r.sendResponseHeaders(500, -1);
             }
         }
     }
@@ -76,7 +78,7 @@ public class Relationship implements HttpHandler {
         }
 
         if (actorId == null || movieId == null) {
-            r.sendResponseHeaders(400, -1); 
+            r.sendResponseHeaders(400, -1);
             return;
         }
 
@@ -92,16 +94,18 @@ public class Relationship implements HttpHandler {
                     response.put("hasRelationship", true);
 
                     String responseText = response.toString();
-                    r.sendResponseHeaders(200, responseText.length()); 
+                    r.sendResponseHeaders(200, responseText.length());
                     OutputStream os = r.getResponseBody();
                     os.write(responseText.getBytes());
                     os.close();
+                    System.out.println("Relationship found: Actor " + actorId + " -> Movie " + movieId);
                 } else {
-                    r.sendResponseHeaders(404, -1);
+                    r.sendResponseHeaders(404, -1); 
+                    System.out.println("No relationship found: Actor " + actorId + " -> Movie " + movieId);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                r.sendResponseHeaders(500, -1); 
+                r.sendResponseHeaders(500, -1);
             }
         }
     }
