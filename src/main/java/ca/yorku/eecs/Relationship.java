@@ -50,29 +50,26 @@ public class Relationship implements HttpHandler {
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
                 
-                String checkQuery = "MATCH (a:Actor {id: $actorId})-[:ACTED_IN]->(m:Movie {id: $movieId}) RETURN a, m";
+                String checkQuery = "MATCH (a:Actor {id: $actorId})-[r:ACTED_IN]->(m:Movie {id: $movieId}) RETURN r";
                 StatementResult checkResult = tx.run(checkQuery, parameters("actorId", actorId, "movieId", movieId));
                 
-                if (checkResult.hasNext()) {
-                  
+                if (checkResult.hasNext()) {         
                     System.out.println("Relationship already exists: Actor " + actorId + " -> Movie " + movieId);
-                    r.sendResponseHeaders(409, -1);
-                } else {
-                    
+                    r.sendResponseHeaders(200, -1); 
+                } else {                   
                     String query = "MATCH (a:Actor {id: $actorId}), (m:Movie {id: $movieId}) " +
-                                   "CREATE (a)-[:ACTED_IN]->(m)";
+                                   "MERGE (a)-[:ACTED_IN]->(m)";
                     tx.run(query, parameters("actorId", actorId, "movieId", movieId));
                     tx.success();
                     System.out.println("Relationship created: Actor " + actorId + " -> Movie " + movieId);
-                    r.sendResponseHeaders(200, -1); 
+                    r.sendResponseHeaders(201, -1);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                r.sendResponseHeaders(500, -1); 
+                r.sendResponseHeaders(500, -1);
             }
         }
     }
-
     private void handleGet(HttpExchange r) throws IOException, JSONException {
         String query = r.getRequestURI().getQuery();
         String actorId = null;
