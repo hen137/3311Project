@@ -12,7 +12,7 @@ public class Relationship implements HttpHandler {
 
     }
 
-    public void handlePost(HttpExchange r) {
+    public void handlePut(HttpExchange r) {
 
     }
 

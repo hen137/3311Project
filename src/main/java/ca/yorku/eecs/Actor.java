@@ -6,7 +6,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
+import org.neo4j.driver.v1.Transaction;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,7 +41,8 @@ public class Actor implements HttpHandler {
         String body = Utils.convert(r.getRequestBody());
         JSONObject deserialized = new JSONObject(body);
 
-        String name, actorId;
+        String actorId, name, query;
+        StatementResult result;
 
         if (deserialized.has("name") && deserialized.has("actorId")) {
             name = deserialized.getString("name");
@@ -53,11 +54,9 @@ public class Actor implements HttpHandler {
         }
 
         try (Session session = Utils.driver.session()) {
-            // refuses to create the node idk why but completes with no issue
-            // use merge query instead?
-            String query = "CREATE (a: actor {name: $name, actorID: $actorId});";
-            StatementResult result = session.run(query, parameters("name", name, "actorId", actorId));
-            while (result.hasNext()) System.out.println(result.next());
+            query = "MERGE (a: actor {name: $name, actorId: $actorId});";
+            result = session.run(query, parameters("name", name, "actorId", actorId));
+
             r.sendResponseHeaders(200, -1);
         } catch (Exception e) {
             System.err.println("Caught Exception: " + e.getMessage());
@@ -69,7 +68,9 @@ public class Actor implements HttpHandler {
         String body = Utils.convert(r.getRequestBody());
         JSONObject deserialized = new JSONObject(body);
 
-        String actorId, response;
+        String actorId, name, query, response;
+        StringBuilder movies;
+        StatementResult result;
 
         if (deserialized.has("actorId")) actorId = deserialized.getString("actorId");
         else {
@@ -78,21 +79,35 @@ public class Actor implements HttpHandler {
         }
 
         try (Session session = Utils.driver.session()) {
-            String query = "MATCH (a: actor {actorId: $actorId})-[:ACTED_IN*1]->(m) RETURN DISTINCT m.movieId;";
-            StatementResult result = session.run(query, parameters("actorId", actorId));
+            try (Transaction tx = session.beginTransaction()) {
+                query = "MATCH (a: actor {actorId: $actorId}) RETURN a.name;";
+                result = tx.run(query, parameters("actorId", actorId));
 
-            // TODO: extract result, format response
-            response = "test 2";
+                if (!result.hasNext()) {
+                    r.sendResponseHeaders(404, -1);
+                    return;
+                }
 
-            r.sendResponseHeaders(200, response.length());
-            OutputStream os = r.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        } catch (NoSuchRecordException e) {
-            System.err.println("Caught Exception: " + e.getMessage());
-            r.sendResponseHeaders(404, -1);
-        }
-        catch (Exception e) {
+                name = result.next().get("a.name").asString();
+
+                query = "MATCH (a: actor {actorId: $actorId})-[:ACTED_IN*1]->(m: movie) RETURN DISTINCT m.movieId;";
+                result = tx.run(query, parameters("actorId", actorId));
+
+                movies = new StringBuilder("[");
+                if (!result.hasNext()) movies.append("]");
+                else while (result.hasNext()) movies.append(result.next().get("m.movieId")).append((result.hasNext())? "," : "]");
+
+                response = String.format("{\"actorId\": \"%s\", \"name\": \"%s\", \"movies\": %s}", actorId, name, movies);
+
+                r.sendResponseHeaders(200, response.length());
+                OutputStream os = r.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            } catch (Exception e) {
+                System.err.println("Caught Exception: " + e.getMessage());
+                r.sendResponseHeaders(500, -1);
+            }
+        } catch (Exception e) {
             System.err.println("Caught Exception: " + e.getMessage());
             r.sendResponseHeaders(500, -1);
         }
@@ -102,7 +117,9 @@ public class Actor implements HttpHandler {
         String body = Utils.convert(r.getRequestBody());
         JSONObject deserialized = new JSONObject(body);
 
-        String actorId1, actorId2, response;
+        String actorId1, actorId2, query, response;
+        StringBuilder movies;
+        StatementResult result;
 
         if (deserialized.has("actorId1") && deserialized.has("actorId2")) {
             actorId1 = deserialized.getString("actorId1");
@@ -114,18 +131,35 @@ public class Actor implements HttpHandler {
         }
 
         try (Session session = Utils.driver.session()) {
-            String query = "MATCH (a: actor {actorId: $actorId1})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(a: actor {actorId: $actorId2}) RETURN DISTINCT m;";
-            StatementResult result = session.run(query, parameters("actorId1", actorId1, "actorId2", actorId2));
+            try (Transaction tx = session.beginTransaction()) {
+                for (String actorId: new String[]{actorId1, actorId2}) {
+                    query = "MATCH (a: actor {actorId: $actorId}) RETURN a.name;";
+                    result = tx.run(query, parameters("actorId", actorId));
 
-            // TODO: extract result, format response
-            response = "";
+                    if (!result.hasNext()) {
+                        r.sendResponseHeaders(404, -1);
+                        return;
+                    }
+                }
 
-            r.sendResponseHeaders(200, response.length());
-            OutputStream os = r.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        } catch (NoSuchRecordException e) {
-            r.sendResponseHeaders(404, -1);
+                query = "MATCH (a1: actor {actorId: $actorId1})-[:ACTED_IN]->(m: movie)<-[:ACTED_IN]-(a2: actor {actorId: $actorId2}) RETURN DISTINCT m.movieId;";
+                result = tx.run(query, parameters("actorId1", actorId1, "actorId2", actorId2));
+
+                movies = new StringBuilder("[");
+
+                if (!result.hasNext()) movies.append("]");
+                else while (result.hasNext()) movies.append(result.next().get("m.movieId")).append((result.hasNext())? "," : "]");
+
+                response = String.format("{\"movies\": %s}", movies);
+
+                r.sendResponseHeaders(200, response.length());
+                OutputStream os = r.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            } catch (Exception e) {
+                System.err.println("Caught Exception: " + e.getMessage());
+                r.sendResponseHeaders(500, -1);
+            }
         }
         catch (Exception e) {
             System.err.println("Caught Exception: " + e.getMessage());
