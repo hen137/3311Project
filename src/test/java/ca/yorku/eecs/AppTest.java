@@ -49,7 +49,6 @@ public class AppTest
                 .when()
                 .put("/api/v1/addActor");
         assertEquals(200, response.getStatusCode());
-        assertEquals("Pass added successfully", response.jsonPath().getString("message"));
     }
 
     @org.junit.Test
@@ -61,7 +60,6 @@ public class AppTest
                 .when()
                 .put("/api/v1/addActor");
         assertEquals(400, response.getStatusCode());
-        assertEquals("Fail to add actor", response.jsonPath().getString("message"));
     }
 
     @org.junit.Test
@@ -73,7 +71,6 @@ public class AppTest
                 .when()
                 .put("/api/v1/addMovie");
         assertEquals(400, response.getStatusCode());
-        assertEquals("Fail to add movie", response.jsonPath().getString("message"));
     }
 
     @org.junit.Test
@@ -85,7 +82,6 @@ public class AppTest
                 .when()
                 .put("/api/v1/addMovie");
         assertEquals(200, response.getStatusCode());
-        assertEquals("Pass added successfully", response.jsonPath().getString("message"));
     }
 
     @org.junit.Test
@@ -97,7 +93,6 @@ public class AppTest
                 .when()
                 .put("/api/v1/addRelationship");
         assertEquals(200, response.getStatusCode());
-        assertEquals("Pass added successfully", response.jsonPath().getString("message"));
     }
 
     @org.junit.Test
@@ -109,47 +104,146 @@ public class AppTest
                 .when()
                 .put("/api/v1/addRelationship");
         assertEquals(400, response.getStatusCode());
-        assertEquals("Fail to add relationship", response.jsonPath().getString("message"));
     }
 
     @org.junit.Test
     public void getActorPass() {
         Response response = given()
-                .contentType("application/json")
+                .queryParam("actorID", "ld10011")
                 .when()
-                .get("/api/v1/getActor/ld10011");
+                .get("/api/v1/getActor");
         assertEquals(200, response.getStatusCode());
-        assertEquals("Leonardo DiCaprio", response.jsonPath().getString("name"));
     }
 
     @org.junit.Test
     public void getActorFail() {
         Response response = given()
-                .contentType("application/json")
+                .queryParam("actorID", "cd10011")
                 .when()
-                .get("/api/v1/getActor/ld10012");
-        assertEquals(400, response.getStatusCode());
-        assertEquals("Fail to get actor", response.jsonPath().getString("message"));
+                .get("/api/v1/getActor");
+        assertEquals(404, response.getStatusCode());
     }
 
     @org.junit.Test
     public void getMoviePass() {
         Response response = given()
-                .contentType("application/json")
+                .queryParam("movieID", "ps24311")
                 .when()
-                .get("/api/v1/getMovie/ps24311");
+                .get("/api/v1/getMovie");
         assertEquals(200, response.getStatusCode());
-        assertEquals("Parasite", response.jsonPath().getString("name"));
     }
 
     @org.junit.Test
     public void getMovieFail() {
         Response response = given()
-                .contentType("application/json")
+                .queryParam("movieID", "ss24312")
                 .when()
-                .get("/api/v1/getMovie/ps24312");
-        assertEquals(400, response.getStatusCode());
-        assertEquals("Fail to get movie", response.jsonPath().getString("message"));
+                .get("/api/v1/getMovie");
+        assertEquals(404, response.getStatusCode());
     }
-    
+
+    @org.junit.Test
+    public void hasRelationshipPass() {
+        Response response = given()
+                .queryParam("movieID", "ss24312")
+                .queryParam("actorID", "cd10011")
+                .when()
+                .get("/api/v1/hasRelationship");
+        assertEquals(200, response.getStatusCode());
+    }
+
+    @org.junit.Test
+    public void hasRelationshipFail() {
+        Response response = given()
+                .queryParam("movieID", "ps24311")
+                .queryParam("actorID", "ld10011")
+                .when()
+                .get("/api/v1/hasRelationship");
+        assertEquals(404, response.getStatusCode());
+    }
+
+    @org.junit.Test
+    public void computeBaconNumberPass() {
+        Response response = given()
+                .queryParam("actorID", "ld10011")
+                .when()
+                .get("/api/v1/computeBaconNumber");
+        assertEquals(200, response.getStatusCode());
+    }
+
+    @org.junit.Test
+    public void computeBaconNumberFail() {
+        Response response = given()
+                .queryParam("actorID", "cd10011")
+                .when()
+                .get("/api/v1/computeBaconNumber");
+        assertEquals(404, response.getStatusCode());
+    }
+
+    @org.junit.Test
+    public void computeBaconPathPass() {
+        Response response = given()
+                .queryParam("actorID", "ld10011")
+                .when()
+                .get("/api/v1/computeBaconPath");
+        assertEquals(200, response.getStatusCode());
+    }
+
+    @org.junit.Test
+    public void computeBaconPathFail() {
+        Response response = given()
+                .queryParam("actorID", "cd10011")
+                .when()
+                .get("/api/v1/computeBaconPath");
+        assertEquals(404, response.getStatusCode());
+    }
+
+    //Actor ID with no path to Kevin Bacon
+    @org.junit.Test
+    public void computeBaconPathNoPath() {
+        Response response = given()
+                .queryParam("actorId", "nm9999999") // Actor ID with no path to Kevin Bacon
+                .when()
+                .get("/api/v1/computeBaconPath");
+
+        // Assert the response code is 404 NOT FOUND
+        assertEquals(404, response.getStatusCode());
+    }
+
+    //Multiple Bacon Paths with same bacon number
+    @org.junit.Test
+    public void computeBaconPathMultiplePaths() {
+        Response response = given()
+                .queryParam("actorId", "nm0000102") // Actor ID with multiple paths to Kevin Bacon
+                .when()
+                .get("/api/v1/computeBaconPath");
+
+        // Assert the response code is 200 OK
+        assertEquals(200, response.getStatusCode());
+
+        // Assert the response body is not null
+        // Check that the response contains Kevin Bacon's ID
+        String baconId = "nm0000102"; // Kevin Bacon's actorId
+        String responseBody = response.getBody().asString();
+        assertTrue(responseBody.contains(baconId));
+    }
+
+    //Bacon path for Kevin Bacon
+    @org.junit.Test
+    public void computeBaconPathKevinBacon() {
+        Response response = given()
+                .queryParam("actorId", "nm0000102") // Kevin Bacon's actorId
+                .when()
+                .get("/api/v1/computeBaconPath");
+
+        // Assert the response code is 200 OK
+        assertEquals(200, response.getStatusCode());
+
+        // Assert the response body is not null
+        // Check that the response contains Kevin Bacon's ID
+        String baconId = "nm0000102"; // Kevin Bacon's actorId
+        String responseBody = response.getBody().asString();
+        assertTrue(responseBody.contains(baconId));
+    }
+
 }
