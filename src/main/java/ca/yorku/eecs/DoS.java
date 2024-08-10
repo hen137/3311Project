@@ -22,10 +22,10 @@ public class DoS implements HttpHandler {
 
     public void handle(HttpExchange r) throws IOException {
         try {
-            if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeDoSNumber/")) {
+            if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeDoSNumber")) {
                 handleGetNumber(r);
             }
-            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeDoSPath/")) {
+            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeDoSPath")) {
                 handleGetPath(r);
             }
             else{

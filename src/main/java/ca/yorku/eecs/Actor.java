@@ -23,10 +23,10 @@ public class Actor implements HttpHandler {
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
             }
-            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/getActor/")) {
+            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/getActor")) {
                 handleGet(r);
             }
-            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/checkRelatedActors/")) {
+            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/checkRelatedActors")) {
                 handleRelatedActors(r);
             }
             else{

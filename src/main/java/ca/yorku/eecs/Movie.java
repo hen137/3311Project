@@ -23,10 +23,10 @@ public class Movie implements HttpHandler {
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
             }
-            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/getMovie/")) {
+            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/getMovie")) {
                 handleGet(r);
             }
-            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/getRelatedMovies/")) {
+            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/getRelatedMovies")) {
                 handleRelatedMovies(r);
             }
             else{

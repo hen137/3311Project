@@ -24,10 +24,10 @@ public class Bacon implements HttpHandler {
 
     public void handle(HttpExchange r) throws IOException {
         try {
-            if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeBaconNumber/")) {
+            if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeBaconNumber")) {
                 handleGetNumber(r);
             }
-            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeBaconPath/")) {
+            else if (r.getRequestMethod().equals("GET") && r.getHttpContext().getPath().equals("/api/v1/computeBaconPath")) {
                 handleGetPath(r);
             }
             else{
