@@ -11,7 +11,7 @@ import io.restassured.response.Response;
 /**
  * Unit test for simple App.
  */
-public class AppTest 
+public class AppTest
     extends TestCase
 {
     /**
@@ -40,19 +40,19 @@ public class AppTest
         assertTrue( true );
     }
 
-    @org.junit.Test
-    public void addActorPass() {
-        String payload = "{ \"name\": \"Leonardo DiCaprio\", \"actorID\": \"ld10011\" }";
+    //@org.junit.TestOpen right now
+    public void testaddActorPass() {
+        String payload = "{ \"name\": \"Leonardo DiCaprio\", \"actorId\": \"ld10011\" }";
         Response response = given()
                 .contentType("application/json")
                 .body(payload)
                 .when()
-                .put("/api/v1/addActor");
+                .put("/api/v1/addActor/");
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void addActorFail() {
+
+    public void testaddActorFail() {
         String payload = "{ \"name\": \"Denzel Washington\"}";
         Response response = given()
                 .contentType("application/json")
@@ -62,8 +62,8 @@ public class AppTest
         assertEquals(400, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void addMovieFail() {
+
+    public void testaddMovieFail() {
         String payload = "{ \"movieID\": \"ps24311\" }";
         Response response = given()
                 .contentType("application/json")
@@ -73,8 +73,7 @@ public class AppTest
         assertEquals(400, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void addMoviePass() {
+    public void testaddMoviePass() {
         String payload = "{ \"name\": \"Parasite\", \"movieID\": \"ps24311\" }";
         Response response = given()
                 .contentType("application/json")
@@ -84,8 +83,7 @@ public class AppTest
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void addRelationshipPass() {
+    public void testaddRelationshipPass() {
         String payload = "{ \"actorID\": \"ld10011\", \"movieID\": \"ps24311\" }";
         Response response = given()
                 .contentType("application/json")
@@ -95,8 +93,7 @@ public class AppTest
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void addRelationshipFail() {
+    public void testaddRelationshipFail() {
         String payload = "{ \"actorID\": \"ld10011\" }";
         Response response = given()
                 .contentType("application/json")
@@ -106,8 +103,7 @@ public class AppTest
         assertEquals(400, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void getActorPass() {
+    public void testgetActorPass() {
         Response response = given()
                 .queryParam("actorID", "ld10011")
                 .when()
@@ -115,8 +111,7 @@ public class AppTest
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void getActorFail() {
+    public void testgetActorFail() {
         Response response = given()
                 .queryParam("actorID", "cd10011")
                 .when()
@@ -124,8 +119,7 @@ public class AppTest
         assertEquals(404, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void getMoviePass() {
+    public void testgetMoviePass() {
         Response response = given()
                 .queryParam("movieID", "ps24311")
                 .when()
@@ -133,8 +127,7 @@ public class AppTest
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void getMovieFail() {
+    public void testgetMovieFail() {
         Response response = given()
                 .queryParam("movieID", "ss24312")
                 .when()
@@ -142,8 +135,7 @@ public class AppTest
         assertEquals(404, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void hasRelationshipPass() {
+    public void testhasRelationshipPass() {
         Response response = given()
                 .queryParam("movieID", "ss24312")
                 .queryParam("actorID", "cd10011")
@@ -152,8 +144,7 @@ public class AppTest
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void hasRelationshipFail() {
+    public void testhasRelationshipFail() {
         Response response = given()
                 .queryParam("movieID", "ps24311")
                 .queryParam("actorID", "ld10011")
@@ -162,8 +153,7 @@ public class AppTest
         assertEquals(404, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void computeBaconNumberPass() {
+    public void testcomputeBaconNumberPass() {
         Response response = given()
                 .queryParam("actorID", "ld10011")
                 .when()
@@ -171,8 +161,7 @@ public class AppTest
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void computeBaconNumberFail() {
+    public void testcomputeBaconNumberFail() {
         Response response = given()
                 .queryParam("actorID", "cd10011")
                 .when()
@@ -180,8 +169,7 @@ public class AppTest
         assertEquals(404, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void computeBaconPathPass() {
+    public void testcomputeBaconPathPass() {
         Response response = given()
                 .queryParam("actorID", "ld10011")
                 .when()
@@ -189,8 +177,7 @@ public class AppTest
         assertEquals(200, response.getStatusCode());
     }
 
-    @org.junit.Test
-    public void computeBaconPathFail() {
+    public void testcomputeBaconPathFail() {
         Response response = given()
                 .queryParam("actorID", "cd10011")
                 .when()
@@ -199,8 +186,7 @@ public class AppTest
     }
 
     //Actor ID with no path to Kevin Bacon
-    @org.junit.Test
-    public void computeBaconPathNoPath() {
+    public void testcomputeBaconPathNoPath() {
         Response response = given()
                 .queryParam("actorId", "nm9999999") // Actor ID with no path to Kevin Bacon
                 .when()
@@ -211,8 +197,7 @@ public class AppTest
     }
 
     //Multiple Bacon Paths with same bacon number
-    @org.junit.Test
-    public void computeBaconPathMultiplePaths() {
+    public void testcomputeBaconPathMultiplePaths() {
         Response response = given()
                 .queryParam("actorId", "nm0000102") // Actor ID with multiple paths to Kevin Bacon
                 .when()
@@ -229,8 +214,7 @@ public class AppTest
     }
 
     //Bacon path for Kevin Bacon
-    @org.junit.Test
-    public void computeBaconPathKevinBacon() {
+    public void testcomputeBaconPathKevinBacon() {
         Response response = given()
                 .queryParam("actorId", "nm0000102") // Kevin Bacon's actorId
                 .when()
