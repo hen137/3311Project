@@ -20,9 +20,9 @@ public class Relationship implements HttpHandler {
     @Override
     public void handle(HttpExchange r) throws IOException {
         try {
-            if (r.getRequestMethod().equalsIgnoreCase("PUT") && r.getHttpContext().getPath().equals("/api/v1/addRelationship/")) {
+            if (r.getRequestMethod().equalsIgnoreCase("PUT") && r.getHttpContext().getPath().equals("/api/v1/addRelationship")) {
                 handlePut(r);
-            } else if (r.getRequestMethod().equalsIgnoreCase("GET") && r.getHttpContext().getPath().equals("/api/v1/hasRelationship/")) {
+            } else if (r.getRequestMethod().equalsIgnoreCase("GET") && r.getHttpContext().getPath().equals("/api/v1/hasRelationship")) {
                 handleGet(r);
             } else {
                 r.sendResponseHeaders(404, -1);
@@ -82,14 +82,12 @@ public class Relationship implements HttpHandler {
         String body = Utils.convert(r.getRequestBody());
         JSONObject deserialized = new JSONObject(body);
 
-        String actorId = null;
-        String movieId = null;
-        
+        String actorId, movieId;
         if (deserialized.has("actorId") && deserialized.has("movieId")) {
             actorId = deserialized.getString("actorId");
             movieId = deserialized.getString("movieId");
         } else {
-            r.sendResponseHeaders(400, -1);
+            r.sendResponseHeaders(400, -1); 
             return;
         }
 
@@ -98,10 +96,11 @@ public class Relationship implements HttpHandler {
                 String query;
                 StatementResult result;
 
+        
                 query = "MATCH (a:Actor {id: $actorId}) RETURN a";
                 result = tx.run(query, parameters("actorId", actorId));
                 if (!result.hasNext()) {
-                    r.sendResponseHeaders(404, -1);
+                    r.sendResponseHeaders(404, -1); 
                     return;
                 }
 
@@ -111,9 +110,9 @@ public class Relationship implements HttpHandler {
                     r.sendResponseHeaders(404, -1); 
                     return;
                 }
-
                 query = "MATCH (a:Actor {id: $actorId})-[:ACTED_IN]->(m:Movie {id: $movieId}) RETURN a, m";
                 result = tx.run(query, parameters("actorId", actorId, "movieId", movieId));
+
                 if (result.hasNext()) {
                     JSONObject response = new JSONObject();
                     response.put("actorId", actorId);
@@ -136,5 +135,6 @@ public class Relationship implements HttpHandler {
             }
         }
     }
+
 
 }
