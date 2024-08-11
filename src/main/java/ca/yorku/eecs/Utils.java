@@ -12,7 +12,7 @@ import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 
 public class Utils {
-    public static String uriDb = "bolt://localhost:7687";
+    public static String uriDb = "bolt://localhost:7689";
     public static String uriUser = "http://localhost:8080";
     public static Config config = Config.builder().withoutEncryption().build();
     public static Driver driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","12345678"), config);

@@ -79,6 +79,7 @@ public class Bacon implements HttpHandler {
                 response = String.format("{\"baconNumber\": %d}", baconNumber);
 
                 r.sendResponseHeaders(200, response.length());
+                System.out.println(response);
                 OutputStream os = r.getResponseBody();
                 os.write(response.getBytes());
                 os.close();
@@ -149,6 +150,7 @@ public class Bacon implements HttpHandler {
                 }
 
                 response = String.format("{\"baconPath\": %s}", baconPath);
+                System.out.println(response);
 
                 r.sendResponseHeaders(200, response.length());
                 OutputStream os = r.getResponseBody();

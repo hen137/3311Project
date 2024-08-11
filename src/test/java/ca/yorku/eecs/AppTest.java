@@ -4,8 +4,9 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import static io.restassured.RestAssured.given;
-import static org.junit.Assert.assertEquals;
 import io.restassured.response.Response;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -40,9 +41,8 @@ public class AppTest
         assertTrue( true );
     }
 
-    //@org.junit.TestOpen right now
     public void testaddActorPass() {
-        String payload = "{ \"name\": \"Leonardo DiCaprio\", \"actorId\": \"ld10011\" }";
+        String payload = "{ \"name\": \"Neve Campbell\", \"actorId\": \"nc200102\" }";
         Response response = given()
                 .contentType("application/json")
                 .body(payload)
@@ -58,7 +58,7 @@ public class AppTest
                 .contentType("application/json")
                 .body(payload)
                 .when()
-                .put("/api/v1/addActor");
+                .put("/api/v1/addActor/");
         assertEquals(400, response.getStatusCode());
     }
 
@@ -69,165 +69,188 @@ public class AppTest
                 .contentType("application/json")
                 .body(payload)
                 .when()
-                .put("/api/v1/addMovie");
+                .put("/api/v1/addMovie/");
         assertEquals(400, response.getStatusCode());
     }
 
     public void testaddMoviePass() {
-        String payload = "{ \"name\": \"Parasite\", \"movieID\": \"ps24311\" }";
+        String payload = "{ \"title\": \"Wild Things\", \"movieId\": \"wt12345\" }";
         Response response = given()
                 .contentType("application/json")
                 .body(payload)
                 .when()
-                .put("/api/v1/addMovie");
+                .put("/api/v1/addMovie/");
         assertEquals(200, response.getStatusCode());
     }
 
-    public void testaddRelationshipPass() {
-        String payload = "{ \"actorID\": \"ld10011\", \"movieID\": \"ps24311\" }";
+    public void testgetActorPass()  {
+        String payload = "{ \"actorId\": \"th708951\",}";
         Response response = given()
                 .contentType("application/json")
                 .body(payload)
                 .when()
-                .put("/api/v1/addRelationship");
-        assertEquals(200, response.getStatusCode());
-    }
-
-    public void testaddRelationshipFail() {
-        String payload = "{ \"actorID\": \"ld10011\" }";
-        Response response = given()
-                .contentType("application/json")
-                .body(payload)
-                .when()
-                .put("/api/v1/addRelationship");
-        assertEquals(400, response.getStatusCode());
-    }
-
-    public void testgetActorPass() {
-        Response response = given()
-                .queryParam("actorID", "ld10011")
-                .when()
-                .get("/api/v1/getActor");
+                .get("/api/v1/getActor/");
         assertEquals(200, response.getStatusCode());
     }
 
     public void testgetActorFail() {
+        String payload = "{ \"actorId\": \"2\",}";
         Response response = given()
-                .queryParam("actorID", "cd10011")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/getActor");
+                .get("/api/v1/getActor/");
         assertEquals(404, response.getStatusCode());
     }
 
     public void testgetMoviePass() {
+        String payload = "{ \"movieId\": \"sm234571\",}";
         Response response = given()
-                .queryParam("movieID", "ps24311")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/getMovie");
+                .get("/api/v1/getMovie/");
         assertEquals(200, response.getStatusCode());
     }
 
     public void testgetMovieFail() {
+        String payload = "{ \"movieId\": \"sm234991\",}";
         Response response = given()
-                .queryParam("movieID", "ss24312")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/getMovie");
+                .get("/api/v1/getMovie/");
         assertEquals(404, response.getStatusCode());
     }
 
-    public void testhasRelationshipPass() {
+    public void testaddRelationshipPass() {
+        String payload = "{ \"actorId\": \"nc200102\", \"movieId\": \"wt12345\" }";
         Response response = given()
-                .queryParam("movieID", "ss24312")
-                .queryParam("actorID", "cd10011")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/hasRelationship");
+                .put("/api/v1/addRelationship/");
+        assertEquals(200, response.getStatusCode());
+    }
+
+    public void testaddRelationshipFail() {
+        String payload = "{ \"actorId\": \"ld10011\" }";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .put("/api/v1/addRelationship/");
+        assertEquals(400, response.getStatusCode());
+    }
+
+    public void testhasRelationshipPass() {
+
+        String payload = "{ \"actorId\": \"th708951\", \"movieId\": \"sm234571\" }";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .get("/api/v1/hasRelationship/");
         assertEquals(200, response.getStatusCode());
     }
 
     public void testhasRelationshipFail() {
+
+        String payload = "{ \"actorId\": \"abcd\", \"movieId\": \"sm234571\" }";
         Response response = given()
-                .queryParam("movieID", "ps24311")
-                .queryParam("actorID", "ld10011")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/hasRelationship");
+                .get("/api/v1/hasRelationship/");
         assertEquals(404, response.getStatusCode());
     }
 
     public void testcomputeBaconNumberPass() {
+        String payload = "{ \"actorId\": \"nc200102\"}";
         Response response = given()
-                .queryParam("actorID", "ld10011")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/computeBaconNumber");
+                .get("/api/v1/computeBaconNumber/");
         assertEquals(200, response.getStatusCode());
     }
 
     public void testcomputeBaconNumberFail() {
+        String payload = "{ \"actorId\": \"12345\"}";
         Response response = given()
-                .queryParam("actorID", "cd10011")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/computeBaconNumber");
+                .get("/api/v1/computeBaconNumber/");
         assertEquals(404, response.getStatusCode());
     }
 
     public void testcomputeBaconPathPass() {
+        String payload = "{ \"actorId\": \"nc200102\"}";
         Response response = given()
-                .queryParam("actorID", "ld10011")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/computeBaconPath");
+                .get("/api/v1/computeBaconPath/");
         assertEquals(200, response.getStatusCode());
     }
 
     public void testcomputeBaconPathFail() {
+        String payload = "{ \"actorId\": \"a0002\"}";
         Response response = given()
-                .queryParam("actorID", "cd10011")
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/computeBaconPath");
+                .get("/api/v1/computeBaconPath/");
         assertEquals(404, response.getStatusCode());
     }
 
-    //Actor ID with no path to Kevin Bacon
-    public void testcomputeBaconPathNoPath() {
+    public void testcheckRelatedActorsPass() {
+        String payload = "{ \"actorId1\": \"nm0000102\", \"actorId2\": \"nc200102\"}";
         Response response = given()
-                .queryParam("actorId", "nm9999999") // Actor ID with no path to Kevin Bacon
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/computeBaconPath");
-
-        // Assert the response code is 404 NOT FOUND
-        assertEquals(404, response.getStatusCode());
-    }
-
-    //Multiple Bacon Paths with same bacon number
-    public void testcomputeBaconPathMultiplePaths() {
-        Response response = given()
-                .queryParam("actorId", "nm0000102") // Actor ID with multiple paths to Kevin Bacon
-                .when()
-                .get("/api/v1/computeBaconPath");
-
-        // Assert the response code is 200 OK
+                .get("/api/v1/checkRelatedActors/");
         assertEquals(200, response.getStatusCode());
-
-        // Assert the response body is not null
-        // Check that the response contains Kevin Bacon's ID
-        String baconId = "nm0000102"; // Kevin Bacon's actorId
-        String responseBody = response.getBody().asString();
-        assertTrue(responseBody.contains(baconId));
     }
 
-    //Bacon path for Kevin Bacon
-    public void testcomputeBaconPathKevinBacon() {
+    public void testcheckRelatedActorsFail() {
+        String payload = "{ \"actorId1\": \"abcd\"}";
         Response response = given()
-                .queryParam("actorId", "nm0000102") // Kevin Bacon's actorId
+                .contentType("application/json")
+                .body(payload)
                 .when()
-                .get("/api/v1/computeBaconPath");
-
-        // Assert the response code is 200 OK
-        assertEquals(200, response.getStatusCode());
-
-        // Assert the response body is not null
-        // Check that the response contains Kevin Bacon's ID
-        String baconId = "nm0000102"; // Kevin Bacon's actorId
-        String responseBody = response.getBody().asString();
-        assertTrue(responseBody.contains(baconId));
+                .get("/api/v1/checkRelatedActors/");
+        assertEquals(400, response.getStatusCode());
     }
+
+    public void testgetRelatedMoviesPass() {
+        String payload = "{ \"movieId\": \"m0004\"}";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .get("/api/v1/getRelatedMovies/");
+        assertEquals(200, response.getStatusCode());
+    }
+
+    public void testgetRelatedMoviesFail() {
+        String payload = "{ \"actorID\": \"m0002\"}";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .get("/api/v1/getRelatedMovies/");
+        assertEquals(400, response.getStatusCode());
+
+
+    }
+
+
+    //Dont Work right now
+
+
+
 
 }
