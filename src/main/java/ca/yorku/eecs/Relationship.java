@@ -51,26 +51,26 @@ public class Relationship implements HttpHandler {
                 String query;
                 StatementResult result;
 
-                query = "MATCH (a:Actor {id: $actorId}) RETURN a";
+                query = "MATCH (a:actor {id: $actorId}) RETURN a";
                 result = tx.run(query, parameters("actorId", actorId));
                 if (!result.hasNext()) {
                     r.sendResponseHeaders(404, -1);
                     return;
                 }
 
-                query = "MATCH (m:Movie {id: $movieId}) RETURN m";
+                query = "MATCH (m:movie {id: $movieId}) RETURN m";
                 result = tx.run(query, parameters("movieId", movieId));
                 if (!result.hasNext()) {
-                    r.sendResponseHeaders(404, -1); 
+                    r.sendResponseHeaders(404, -1);
                     return;
                 }
 
-                query = "MATCH (a:Actor {id: $actorId}), (m:Movie {id: $movieId}) " +
+                query = "MATCH (a:actor {id: $actorId}), (m:movie {id: $movieId}) " +
                         "MERGE (a)-[:ACTED_IN]->(m)";
                 tx.run(query, parameters("actorId", actorId, "movieId", movieId));
                 tx.success();
                 System.out.println("Relationship created: Actor " + actorId + " -> Movie " + movieId);
-                r.sendResponseHeaders(200, -1); 
+                r.sendResponseHeaders(200, -1);
             } catch (Exception e) {
                 e.printStackTrace();
                 r.sendResponseHeaders(500, -1);
@@ -91,17 +91,35 @@ public class Relationship implements HttpHandler {
             return;
         }
 
+        JSONObject response = new JSONObject();
+        response.put("actorId", actorId);
+        response.put("movieId", movieId);
+
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
                 String query;
                 StatementResult result;
 
-                query = "MATCH (a:Actor {id: $actorId})-[:ACTED_IN]->(m:Movie {id: $movieId}) RETURN a, m";
-                result = tx.run(query, parameters("actorId", actorId, "movieId", movieId));
+                query = "MATCH (a:actor {id: $actorId}) RETURN a";
+                result = tx.run(query, parameters("actorId", actorId));
+                if (!result.hasNext()) {
+                    System.out.println("Actor not found: " + actorId);
+                    response.put("hasRelationship", false);
+                    sendResponse(r, response, 200);
+                    return;
+                }
 
-                JSONObject response = new JSONObject();
-                response.put("actorId", actorId);
-                response.put("movieId", movieId);
+                query = "MATCH (m:movie {id: $movieId}) RETURN m";
+                result = tx.run(query, parameters("movieId", movieId));
+                if (!result.hasNext()) {
+                    System.out.println("Movie not found: " + movieId);
+                    response.put("hasRelationship", false);
+                    sendResponse(r, response, 200);
+                    return;
+                }
+
+                query = "MATCH (a:actor {id: $actorId})-[:ACTED_IN]->(m:movie {id: $movieId}) RETURN a, m";
+                result = tx.run(query, parameters("actorId", actorId, "movieId", movieId));
 
                 if (result.hasNext()) {
                     response.put("hasRelationship", true);
@@ -111,16 +129,19 @@ public class Relationship implements HttpHandler {
                     System.out.println("No relationship found: Actor " + actorId + " -> Movie " + movieId);
                 }
 
-                String responseText = response.toString();
-                r.sendResponseHeaders(200, responseText.length());
-                OutputStream os = r.getResponseBody();
-                os.write(responseText.getBytes());
-                os.close();
+                sendResponse(r, response, 200);
             } catch (Exception e) {
                 e.printStackTrace();
                 r.sendResponseHeaders(500, -1);
             }
         }
     }
-}
 
+    private void sendResponse(HttpExchange r, JSONObject response, int statusCode) throws IOException {
+        String responseText = response.toString();
+        r.sendResponseHeaders(statusCode, responseText.length());
+        OutputStream os = r.getResponseBody();
+        os.write(responseText.getBytes());
+        os.close();
+    }
+}
