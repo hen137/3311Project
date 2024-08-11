@@ -105,7 +105,7 @@ public class Relationship implements HttpHandler {
                 if (!result.hasNext()) {
                     System.out.println("Actor not found: " + actorId);
                     response.put("hasRelationship", false);
-                    sendResponse(r, response, 200);
+                    sendResponse(r, response, 404);
                     return;
                 }
 
@@ -114,7 +114,7 @@ public class Relationship implements HttpHandler {
                 if (!result.hasNext()) {
                     System.out.println("Movie not found: " + movieId);
                     response.put("hasRelationship", false);
-                    sendResponse(r, response, 200);
+                    sendResponse(r, response, 404);
                     return;
                 }
 
