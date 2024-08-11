@@ -104,8 +104,7 @@ public class Relationship implements HttpHandler {
                 result = tx.run(query, parameters("actorId", actorId));
                 if (!result.hasNext()) {
                     System.out.println("Actor not found: " + actorId);
-                    response.put("hasRelationship", false);
-                    sendResponse(r, response, 404);
+                    r.sendResponseHeaders(404, -1);
                     return;
                 }
 
@@ -113,8 +112,7 @@ public class Relationship implements HttpHandler {
                 result = tx.run(query, parameters("movieId", movieId));
                 if (!result.hasNext()) {
                     System.out.println("Movie not found: " + movieId);
-                    response.put("hasRelationship", false);
-                    sendResponse(r, response, 404);
+                    r.sendResponseHeaders(404, -1);
                     return;
                 }
 
@@ -129,19 +127,15 @@ public class Relationship implements HttpHandler {
                     System.out.println("No relationship found: Actor " + actorId + " -> Movie " + movieId);
                 }
 
-                sendResponse(r, response, 200);
+                String responseText = response.toString();
+                r.sendResponseHeaders(200, responseText.length());
+                OutputStream os = r.getResponseBody();
+                os.write(responseText.getBytes());
+                os.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 r.sendResponseHeaders(500, -1);
             }
         }
-    }
-
-    private void sendResponse(HttpExchange r, JSONObject response, int statusCode) throws IOException {
-        String responseText = response.toString();
-        r.sendResponseHeaders(statusCode, responseText.length());
-        OutputStream os = r.getResponseBody();
-        os.write(responseText.getBytes());
-        os.close();
     }
 }
