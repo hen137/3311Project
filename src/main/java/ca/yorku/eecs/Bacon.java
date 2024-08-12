@@ -19,7 +19,6 @@ public class Bacon implements HttpHandler {
     private final String actorIdKevinBacon = "nm0000102";
 
     public Bacon() {
-
     }
 
     public void handle(HttpExchange r) throws IOException {
