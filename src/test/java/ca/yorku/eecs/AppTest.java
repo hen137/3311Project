@@ -5,8 +5,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import static io.restassured.RestAssured.given;
 import io.restassured.response.Response;
-import org.json.JSONException;
-import org.json.JSONObject;
+
 
 
 /**
@@ -245,6 +244,45 @@ public class AppTest
         assertEquals(400, response.getStatusCode());
 
 
+    }
+    public void testcomputeDoSNumberPass() {
+        String payload = "{ \"actorId1\": \"nm0000102\", \"actorId2\": \"nc200102\"}";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .get("/api/v1/computeDoSNumber/");
+        assertEquals(200, response.getStatusCode());
+    }
+
+    public void testcomputeDoSNumberFail() {
+        String payload = "{ \"actorId1\": \"abcd\"}";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .get("/api/v1/computeDoSNumber/");
+        assertEquals(400, response.getStatusCode());
+    }
+
+    public void testcomputeDoSPathPass() {
+        String payload = "{ \"actorId1\": \"nm0000102\", \"actorId2\": \"nc200102\"}";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .get("/api/v1/computeDoSPath/");
+        assertEquals(200, response.getStatusCode());
+    }
+
+    public void testcomputeDoSPathFail() {
+        String payload = "{ \"actorId1\": \"abcd\"}";
+        Response response = given()
+                .contentType("application/json")
+                .body(payload)
+                .when()
+                .get("/api/v1/computeDoSPath/");
+        assertEquals(400, response.getStatusCode());
     }
 
 
