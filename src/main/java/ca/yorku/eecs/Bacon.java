@@ -33,6 +33,7 @@ public class Bacon implements HttpHandler {
                 r.sendResponseHeaders(404, -1);
             }
         } catch (Exception e) {
+            System.err.println("Caught Exception: " + e.getMessage());
             r.sendResponseHeaders(500, -1);
         }
     }
@@ -53,7 +54,7 @@ public class Bacon implements HttpHandler {
 
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
-                query = "MATCH (a: actor {actorId: $actorId}) RETURN a;";
+                query = "MATCH (a: actor {id: $actorId}) RETURN a;";
                 result = tx.run(query, parameters("actorId", actorId));
 
                 if (!result.hasNext()) {
@@ -63,7 +64,7 @@ public class Bacon implements HttpHandler {
 
                 if (actorId.equals(actorIdKevinBacon)) baconNumber = 0;
                 else {
-                    query = "MATCH p = shortestpath((a1: actor {actorId: $actorId})-[:ACTED_IN*]-(a2: actor {actorId: $actorIdKevinBacon})) RETURN p";
+                    query = "MATCH p = shortestpath((a1: actor {id: $actorId})-[:ACTED_IN*]-(a2: actor {id: $actorIdKevinBacon})) RETURN p";
                     result = tx.run(query, parameters("actorId", actorId, "actorIdKevinBacon", actorIdKevinBacon));
 
                     if (!result.hasNext()) {
@@ -104,7 +105,7 @@ public class Bacon implements HttpHandler {
 
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
-                query = "MATCH (a: actor {actorId: $actorId}) RETURN a;";
+                query = "MATCH (a: actor {id: $actorId}) RETURN a;";
                 result = tx.run(query, parameters("actorId", actorId));
 
                 if (!result.hasNext()) {
@@ -112,7 +113,7 @@ public class Bacon implements HttpHandler {
                     return;
                 }
 
-                query = "MATCH p = shortestpath((a1: actor {actorId: $actorId})-[:ACTED_IN*]-(a2: actor {actorId: $actorIdKevinBacon})) RETURN p";
+                query = "MATCH p = shortestpath((a1: actor {id: $actorId})-[:ACTED_IN*]-(a2: actor {id: $actorIdKevinBacon})) RETURN p";
                 result = tx.run(query, parameters("actorId", actorId, "actorIdKevinBacon", actorIdKevinBacon));
 
                 if (!result.hasNext()) {
@@ -125,24 +126,24 @@ public class Bacon implements HttpHandler {
 
                 for (Path.Segment step: result.next().get("p").asPath()) {
                     if (!actor_movie) {
-                        query = "MATCH (a) WHERE ID(a) = $ID RETURN a.actorId";
+                        query = "MATCH (a) WHERE ID(a) = $ID RETURN a.id";
                         result = tx.run(query, parameters("ID", step.end().id()));
 
-                        baconPath.append((Objects.equals(result.next().get("a.actorId").toString(), actorIdKevinBacon))? "," : ", \"" + actorIdKevinBacon + "\"]");
+                        baconPath.append((Objects.equals(result.next().get("a.id").toString(), actorIdKevinBacon))? "," : ", \"" + actorIdKevinBacon + "\"]");
 
                         actor_movie = true;
                         continue;
                     }
 
-                    query = "MATCH (a) WHERE ID(a) = $ID RETURN a.actorId";
+                    query = "MATCH (a) WHERE ID(a) = $ID RETURN a.id";
                     result = tx.run(query, parameters("ID", step.start().id()));
 
-                    baconPath.append(result.next().get("a.actorId")).append(",");
+                    baconPath.append(result.next().get("a.id")).append(",");
 
-                    query = "MATCH (m) WHERE ID(m) = $ID RETURN m.movieId";
+                    query = "MATCH (m) WHERE ID(m) = $ID RETURN m.id";
                     result = tx.run(query, parameters("ID", step.end().id()));
 
-                    baconPath.append(result.next().get("m.movieId"));
+                    baconPath.append(result.next().get("m.id"));
 
                     actor_movie = false;
                 }

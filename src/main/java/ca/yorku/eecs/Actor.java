@@ -33,6 +33,7 @@ public class Actor implements HttpHandler {
                 r.sendResponseHeaders(404, -1);
             }
         } catch (Exception e) {
+            System.err.println("Caught Exception: " + e.getMessage());
             r.sendResponseHeaders(500, -1);
         }
     }
@@ -54,7 +55,7 @@ public class Actor implements HttpHandler {
         }
 
         try (Session session = Utils.driver.session()) {
-            query = "MERGE (a: actor {name: $name, actorId: $actorId});";
+            query = "MERGE (a: actor {name: $name, id: $actorId});";
             result = session.run(query, parameters("name", name, "actorId", actorId));
 
             r.sendResponseHeaders(200, -1);
@@ -80,7 +81,7 @@ public class Actor implements HttpHandler {
 
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
-                query = "MATCH (a: actor {actorId: $actorId}) RETURN a.name;";
+                query = "MATCH (a: actor {id: $actorId}) RETURN a.name;";
                 result = tx.run(query, parameters("actorId", actorId));
 
                 if (!result.hasNext()) {
@@ -90,12 +91,12 @@ public class Actor implements HttpHandler {
 
                 name = result.next().get("a.name").asString();
 
-                query = "MATCH (a: actor {actorId: $actorId})-[:ACTED_IN*1]->(m: movie) RETURN DISTINCT m.movieId;";
+                query = "MATCH (a: actor {id: $actorId})-[:ACTED_IN*1]->(m: movie) RETURN DISTINCT m.id;";
                 result = tx.run(query, parameters("actorId", actorId));
 
                 movies = new StringBuilder("[");
                 if (!result.hasNext()) movies.append("]");
-                else while (result.hasNext()) movies.append(result.next().get("m.movieId")).append((result.hasNext())? "," : "]");
+                else while (result.hasNext()) movies.append(result.next().get("m.id")).append((result.hasNext())? "," : "]");
 
                 response = String.format("{\"actorId\": \"%s\", \"name\": \"%s\", \"movies\": %s}", actorId, name, movies);
 
@@ -130,7 +131,7 @@ public class Actor implements HttpHandler {
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
                 for (String actorId: new String[]{actorId1, actorId2}) {
-                    query = "MATCH (a: actor {actorId: $actorId}) RETURN a.name;";
+                    query = "MATCH (a: actor {id: $actorId}) RETURN a.name;";
                     result = tx.run(query, parameters("actorId", actorId));
 
                     if (!result.hasNext()) {
@@ -139,13 +140,13 @@ public class Actor implements HttpHandler {
                     }
                 }
 
-                query = "MATCH (a1: actor {actorId: $actorId1})-[:ACTED_IN]->(m: movie)<-[:ACTED_IN]-(a2: actor {actorId: $actorId2}) RETURN DISTINCT m.movieId;";
+                query = "MATCH (a1: actor {id: $actorId1})-[:ACTED_IN]->(m: movie)<-[:ACTED_IN]-(a2: actor {id: $actorId2}) RETURN DISTINCT m.id;";
                 result = tx.run(query, parameters("actorId1", actorId1, "actorId2", actorId2));
 
                 movies = new StringBuilder("[");
 
                 if (!result.hasNext()) movies.append("]");
-                else while (result.hasNext()) movies.append(result.next().get("m.movieId")).append((result.hasNext())? "," : "]");
+                else while (result.hasNext()) movies.append(result.next().get("m.id")).append((result.hasNext())? "," : "]");
 
                 response = String.format("{\"movies\": %s}", movies);
 

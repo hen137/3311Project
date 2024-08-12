@@ -20,15 +20,15 @@ public class Relationship implements HttpHandler {
     @Override
     public void handle(HttpExchange r) throws IOException {
         try {
-            if (r.getRequestMethod().equalsIgnoreCase("PUT") && r.getHttpContext().getPath().equals("/api/v1/addRelationship")) {
+            if (r.getRequestMethod().equalsIgnoreCase("PUT")) {
                 handlePut(r);
-            } else if (r.getRequestMethod().equalsIgnoreCase("GET") && r.getHttpContext().getPath().equals("/api/v1/hasRelationship")) {
+            } else if (r.getRequestMethod().equalsIgnoreCase("GET")) {
                 handleGet(r);
             } else {
                 r.sendResponseHeaders(404, -1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Caught Exception: " + e.getMessage());
             r.sendResponseHeaders(500, -1);
         }
     }
@@ -51,28 +51,28 @@ public class Relationship implements HttpHandler {
                 String query;
                 StatementResult result;
 
-                query = "MATCH (a:actor {actorId: $actorId}) RETURN a";
+                query = "MATCH (a:actor {id: $actorId}) RETURN a";
                 result = tx.run(query, parameters("actorId", actorId));
                 if (!result.hasNext()) {
                     r.sendResponseHeaders(404, -1);
                     return;
                 }
 
-                query = "MATCH (m:movie {movieId: $movieId}) RETURN m";
+                query = "MATCH (m:movie {id: $movieId}) RETURN m";
                 result = tx.run(query, parameters("movieId", movieId));
                 if (!result.hasNext()) {
                     r.sendResponseHeaders(404, -1);
                     return;
                 }
 
-                query = "MATCH (a:actor {actorId: $actorId}), (m:movie {movieId: $movieId}) " +
-                        "MERGE (a)-[:ACTED_IN]->(m)";
+                query = "MATCH (a:actor {id: $actorId}), (m:movie {id: $movieId}) MERGE (a)-[:ACTED_IN]->(m)";
                 tx.run(query, parameters("actorId", actorId, "movieId", movieId));
-                tx.success();
-                System.out.println("Relationship created: Actor " + actorId + " -> Movie " + movieId);
+
+//                System.out.println("Relationship created: Actor " + actorId + " -> Movie " + movieId);
+
                 r.sendResponseHeaders(200, -1);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("Caught Exception: " + e.getMessage());
                 r.sendResponseHeaders(500, -1);
             }
         }
@@ -82,6 +82,7 @@ public class Relationship implements HttpHandler {
         String body = Utils.convert(r.getRequestBody());
         JSONObject deserialized = new JSONObject(body);
 
+        boolean relationshipExists;
         String actorId, movieId;
         if (deserialized.has("actorId") && deserialized.has("movieId")) {
             actorId = deserialized.getString("actorId");
@@ -100,7 +101,7 @@ public class Relationship implements HttpHandler {
                 String query;
                 StatementResult result;
 
-                query = "MATCH (a:actor {actorId: $actorId}) RETURN a";
+                query = "MATCH (a:actor {id: $actorId}) RETURN a";
                 result = tx.run(query, parameters("actorId", actorId));
                 if (!result.hasNext()) {
                     System.out.println("Actor not found: " + actorId);
@@ -108,7 +109,7 @@ public class Relationship implements HttpHandler {
                     return;
                 }
 
-                query = "MATCH (m:movie {movieId: $movieId}) RETURN m";
+                query = "MATCH (m:movie {id: $movieId}) RETURN m";
                 result = tx.run(query, parameters("movieId", movieId));
                 if (!result.hasNext()) {
                     System.out.println("Movie not found: " + movieId);
@@ -116,23 +117,22 @@ public class Relationship implements HttpHandler {
                     return;
                 }
 
-                query = "MATCH (a:actor {actorId: $actorId})-[:ACTED_IN]->(m:movie {movieId: $movieId}) RETURN a, m";
+                query = "MATCH (a:actor {id: $actorId})-[:ACTED_IN]->(m:movie {id: $movieId}) RETURN a, m";
                 result = tx.run(query, parameters("actorId", actorId, "movieId", movieId));
 
-                if (result.hasNext()) {
-                    response.put("hasRelationship", true);
-                    System.out.println("Relationship found: Actor " + actorId + " -> Movie " + movieId);
-                    String responseText = response.toString();
-                    r.sendResponseHeaders(200, responseText.length());
-                    OutputStream os = r.getResponseBody();
-                    os.write(responseText.getBytes());
-                    os.close();
-                } else {
-                    System.out.println("No relationship found: Actor " + actorId + " -> Movie " + movieId);
-                    r.sendResponseHeaders(404, -1);
-                }
+                relationshipExists = result.hasNext();
+
+//                System.out.printf("Relationship %s found: Actor %s -> Movie %s\n", (relationshipExists)? "" : "not", actorId, movieId);
+
+                response.put("hasRelationship", relationshipExists);
+
+                String responseText = response.toString();
+                r.sendResponseHeaders(200, responseText.length());
+                OutputStream os = r.getResponseBody();
+                os.write(responseText.getBytes());
+                os.close();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("Caught Exception: " + e.getMessage());
                 r.sendResponseHeaders(500, -1);
             }
         }

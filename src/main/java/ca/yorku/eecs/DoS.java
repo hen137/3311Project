@@ -32,6 +32,7 @@ public class DoS implements HttpHandler {
                 r.sendResponseHeaders(404, -1);
             }
         } catch (Exception e) {
+            System.err.println("Caught Exception: " + e.getMessage());
             r.sendResponseHeaders(500, -1);
         }
     }
@@ -56,7 +57,7 @@ public class DoS implements HttpHandler {
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
                 for (String actorId: new String[]{actorId1, actorId2}) {
-                    query = "MATCH (a: actor {actorId: $actorId}) RETURN a.name;";
+                    query = "MATCH (a: actor {id: $actorId}) RETURN a.name;";
                     result = tx.run(query, parameters("actorId", actorId));
 
                     if (!result.hasNext()) {
@@ -67,7 +68,7 @@ public class DoS implements HttpHandler {
 
                 if (actorId1.equals(actorId2)) DoSNumber = 0;
                 else {
-                    query = "MATCH p = shortestpath((a1: actor {actorId: $actorId1})-[:ACTED_IN*]-(a2: actor {actorId: $actorId2})) RETURN p";
+                    query = "MATCH p = shortestpath((a1: actor {id: $actorId1})-[:ACTED_IN*]-(a2: actor {id: $actorId2})) RETURN p";
                     result = tx.run(query, parameters("actorId1", actorId1, "actorId2", actorId2));
 
                     if (!result.hasNext()) {
@@ -111,7 +112,7 @@ public class DoS implements HttpHandler {
         try (Session session = Utils.driver.session()) {
             try (Transaction tx = session.beginTransaction()) {
                 for (String actorId: new String[]{actorId1, actorId2}) {
-                    query = "MATCH (a: actor {actorId: $actorId}) RETURN a.name;";
+                    query = "MATCH (a: actor {id: $actorId}) RETURN a.name;";
                     result = tx.run(query, parameters("actorId", actorId));
 
                     if (!result.hasNext()) {
@@ -120,7 +121,7 @@ public class DoS implements HttpHandler {
                     }
                 }
 
-                query = "MATCH p = shortestpath((a1: actor {actorId: $actorId1})-[:ACTED_IN*]-(a2: actor {actorId: $actorId2})) RETURN p";
+                query = "MATCH p = shortestpath((a1: actor {id: $actorId1})-[:ACTED_IN*]-(a2: actor {id: $actorId2})) RETURN p";
                 result = tx.run(query, parameters("actorId1", actorId1, "actorId2", actorId2));
 
                 if (!result.hasNext()) {
@@ -133,24 +134,24 @@ public class DoS implements HttpHandler {
 
                 for (Path.Segment step: result.next().get("p").asPath()) {
                     if (!actor_movie) {
-                        query = "MATCH (a) WHERE ID(a) = $ID RETURN a.actorId";
+                        query = "MATCH (a) WHERE ID(a) = $ID RETURN a.id";
                         result = tx.run(query, parameters("ID", step.end().id()));
 
-                        DosPath.append((Objects.equals(result.next().get("a.actorId").toString(), actorId2))? "," : ", \"" + actorId2 + "\"]");
+                        DosPath.append((Objects.equals(result.next().get("a.id").toString(), actorId2))? "," : ", \"" + actorId2 + "\"]");
 
                         actor_movie = true;
                         continue;
                     }
 
-                    query = "MATCH (a) WHERE ID(a) = $ID RETURN a.actorId";
+                    query = "MATCH (a) WHERE ID(a) = $ID RETURN a.id";
                     result = tx.run(query, parameters("ID", step.start().id()));
 
-                    DosPath.append(result.next().get("a.actorId")).append(",");
+                    DosPath.append(result.next().get("a.id")).append(",");
 
-                    query = "MATCH (m) WHERE ID(m) = $ID RETURN m.movieId";
+                    query = "MATCH (m) WHERE ID(m) = $ID RETURN m.id";
                     result = tx.run(query, parameters("ID", step.end().id()));
 
-                    DosPath.append(result.next().get("m.movieId"));
+                    DosPath.append(result.next().get("m.id"));
 
                     actor_movie = false;
                 }
